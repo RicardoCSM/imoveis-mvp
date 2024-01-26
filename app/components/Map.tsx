@@ -67,7 +67,11 @@ function Map() {
     const defaultMapOptions = {
         fullscreenControl: false,
         zoomControl: false,
-        mapTypeControl: false,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+            position: map && google.maps.ControlPosition.RIGHT_BOTTOM,
+            style: map && google.maps.MapTypeControlStyle.DEFAULT
+        },        
         streetViewControl: true,
     };
 
