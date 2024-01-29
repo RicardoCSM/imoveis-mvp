@@ -9,6 +9,7 @@ import Addresses from '../data/Addresses';
 import IAddresses from '../interfaces/IAddresses';
 import useEditModal from '../hooks/useEditModal';
 import useAddModal from '../hooks/useAddModal';
+import useAddressStore from '../hooks/useAddressStore';
 
 const containerStyle = {
     width: '100%',
@@ -21,6 +22,7 @@ function Map() {
     const addresses = Addresses;
     const editModal = useEditModal();
     const addModal = useAddModal();
+    const setSelectedAddressId = useAddressStore((state) => state.setSelectedAddressId);
 
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
@@ -34,8 +36,8 @@ function Map() {
         lat: -18.92,
         lng: -46.94
     });
-    const [zoom, setZoom] = useState(6);
-    const [map, setMap] = useState<any>(null)
+    const [zoom, setZoom] = useState<number | undefined>(6);
+    const [map, setMap] = useState<google.maps.Map | undefined>(undefined)
     const onSearchBoxLoad = (ref: google.maps.places.SearchBox) => {
         searchBoxRef.current = ref;
     };
@@ -57,6 +59,11 @@ function Map() {
         }
     };
 
+    const handleEditModalOpen = (addressId: number) => {
+        editModal.onOpen();
+        setSelectedAddressId(addressId);
+    }
+
     const handleAddressMarkerClick = (address: IAddresses) => {
         const lat = address.lat;
         const lng = address.lng;
@@ -71,7 +78,7 @@ function Map() {
         mapTypeControlOptions: {
             position: map && google.maps.ControlPosition.RIGHT_BOTTOM,
             style: map && google.maps.MapTypeControlStyle.DEFAULT
-        },        
+        },
         streetViewControl: true,
     };
 
@@ -93,9 +100,9 @@ function Map() {
                 zoom={zoom}
                 options={defaultMapOptions}
                 onZoomChanged={() => {
-                    if(map) {
+                    if (map) {
                         setZoom(map.getZoom());
-                        setCoordinates(map.getCenter());
+                        setCoordinates({ lat: map.getCenter()?.lat() || 0, lng: map.getCenter()?.lng() || 0 });
                     };
                 }}
             >
@@ -105,8 +112,8 @@ function Map() {
                             {addresses.map((address) => (
                                 <div key={address.id} className="flex flex-col justify-center bg-white shadow-lg rounded-md h-[120px] p-2">
                                     <div className="flex gap-2 w-full h-1/5 justify-end">
-                                        <FiEdit onClick={editModal.onOpen} className="cursor-pointer text-lg text-blue-700 hover:text-blue-900" />
-                                        <LuMapPin onClick={() => handleAddressMarkerClick(address)} className="cursor-pointer text-lg text-blue-700 hover:text-blue-900"/>
+                                        <FiEdit onClick={() => handleEditModalOpen(address.id)} className="cursor-pointer text-lg text-blue-700 hover:text-blue-900" />
+                                        <LuMapPin onClick={() => handleAddressMarkerClick(address)} className="cursor-pointer text-lg text-blue-700 hover:text-blue-900" />
                                     </div>
                                     <div className="h-4/5">
                                         <h2 className="text-blue-900 font-medium text-lg mb-3">{address.city}</h2>
